@@ -1,8 +1,12 @@
-# Claude Code Client
+<h1 align="center">Claude Code Client</h1>
+<p align="center"><code>v1.2.0</code></p>
+<p align="center">
+  English | <a href="README.ru.md">Русский</a>
+</p>
 
-A convenient batch script (`.cmd`) to install, update, and run the official **Claude Code** CLI client in an isolated environment on Windows.
+A convenient batch script (`.cmd`) for installing, updating, and running the official **Claude Code** CLI client in an isolated environment on Windows.
 
-This script automates the download of the `claude.exe` executable, isolates configuration files from the main system, and provides an easy-to-use setup interface for the API connection.
+This script automates the download of the `claude.exe` executable, isolates configuration files from the main system, and provides a simple interface for configuring API connectivity.
 
 ---
 
@@ -10,41 +14,68 @@ This script automates the download of the `claude.exe` executable, isolates conf
 
 1. **Isolated Environment (Sandbox / Portable Mode)**:
    - The script overrides the `USERPROFILE` environment variable, pointing it to the `claude` folder inside the script's directory.
-   - All global caches, settings, authorization sessions, and Claude Code plugins are stored locally in the script's directory, keeping your global Windows user profile clean.
+   - All global caches, settings, authentication sessions, and Claude Code plugins are stored locally in the script's directory, keeping the global Windows user profile clean.
 
 2. **Automatic Installation**:
-   - On the first run, the script automatically checks for the latest version of Claude Code on Anthropic's servers, downloads it using `curl`, and sets it up in the correct directories.
+   - On the first run, the script automatically checks for the latest version of Claude Code on Anthropic's servers, downloads it using `curl`, and sets it up in the appropriate directories.
 
-3. **Flexible Configuration via `.env`**:
-   - On first startup, the script prompts you to enter the following parameters:
-     - `ANTHROPIC_BASE_URL` (defaults to the official API: `https://api.anthropic.com`, but you can specify a custom proxy server).
+3. **Flexible Configuration via `settings.ini`**:
+   - On the first run, the script will prompt you to enter the following parameters:
+     - `ANTHROPIC_BASE_URL` (defaults to the official API: `https://api.anthropic.com`, but you can specify your own proxy server).
      - `ANTHROPIC_AUTH_TOKEN` (authorization token, useful when using proxies or custom gateways).
-     - `MODEL` (default model, e.g., `claude-opus-4-6`, `claude-sonnet-4-6`, etc.).
-   - The configuration is saved to the local `resources\.env` file and is automatically loaded on subsequent runs.
+     - `MODEL_NAME` (default model, e.g., `claude-opus-4-6`, `claude-sonnet-4-6`, etc.).
+     - `UPDATE_BRANCH` (update branch: `main` or `dev`).
+   - The configuration is saved to a local `resources\settings.ini` file and automatically loaded on subsequent runs.
 
-4. **System PATH Integration**:
-   - The script checks if its folder is added to the user's system `Path` environment variable.
-   - If not, it offers to add it automatically, making a registry backup to `resources\env_backup.reg` beforehand for safety.
+4. **Profile System**:
+   - The `settings.ini` file supports named sections (profiles), allowing you to store multiple configurations in a single file.
+   - A profile can be specified via the `--profile`/`-p` flag with a section name, or selected interactively from a list by running `--profile` without an argument.
+   - Example `settings.ini` with a profile:
+     ```ini
+      ANTHROPIC_BASE_URL=http://localhost:20128/v1
+      ANTHROPIC_AUTH_TOKEN=sk-88cc84a27b153ff0-46fd23-2dcde1b5
+      MODEL_NAME=openrouter/anthropic/claude-opus-4.6
+      UPDATE_BRANCH=dev
+      UPDATE_REPOSITORY=https://github.com/retopology/Claude-Code-Client
+      UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd
 
-5. **CLI Argument Forwarding**:
-   - All arguments passed to `ccc.cmd` are directly forwarded to the underlying executable (e.g., `ccc.cmd /fast` or `ccc.cmd --help`).
+      [Claude Opus 4.8]
+      MODEL_NAME=openrouter/anthropic/claude-opus-4.8
+
+      [Ollama Qwen3.5:9b]
+      ANTHROPIC_BASE_URL=http://localhost:11434
+      MODEL_NAME=qwen3.5:9b
+     ```
+
+5. **Script Update**:
+   - Built-in update mechanism via the `--update-script`/`-u` flag.
+   - The script downloads the latest version from the specified repository and branch, compares versions, and offers to install the update if one is available.
+   - Before updating, the current version is saved in `resources\old versions\`.
+
+6. **System PATH Integration**:
+   - On first installation, the script checks whether its folder has been added to the user's system `Path` environment variable.
+   - If not, it offers to add it automatically, first creating a registry backup in `resources\env_backup.reg` for safety.
+
+7. **Command-Line Argument Passthrough**:
+   - All arguments except `--profile`/`-p` and `--update-script`/`-u` are passed directly to the underlying executable (e.g., `claude /fast` or `claude --help`).
 
 ---
 
 ## Directory Structure After Setup
 
-After the first run, the script creates the following directory structure:
+After the first run, the script will create the following directory structure:
 
 ```text
-📁 Your_Project_Folder/
-├── 📄 ccc.cmd          # Startup script
+📁 Your_Folder/
+├── 📄 claude.cmd       # Startup script
 ├── 📁 claude/          # Local USERPROFILE (isolated environment)
 │   ├── 📁 .claude/     # Configurations, cache, session history, and plugins
 │   └── 📁 .local/
 │       ├── 📁 bin/                    # Active claude.exe binary
 │       └── 📁 share/claude/versions/  # Archive of downloaded versions
-└── 📁 resources/             # Script resources
-    ├── 📄 .env               # Connection settings (URL, Token, Model)
+└── 📁 resources/
+    ├── 📁 old versions/      # Previous script versions (saved during updates)
+    ├── 📄 settings.ini       # Connection settings (URL, token, model, profiles)
     ├── 📄 claude.exe         # Copied executable file
     └── 📄 env_backup.reg     # Registry backup (created before modifying PATH)
 ```
@@ -54,44 +85,60 @@ After the first run, the script creates the following directory structure:
 ## Requirements
 
 - Operating System: **Windows 10 / 11**
-- Pre-installed `curl` utility (comes built-in with all modern versions of Windows 10/11)
-- Internet connection to download the binary and communicate with the API
+- Pre-installed `curl` utility (built into all modern versions of Windows 10/11)
+- Internet connection for downloading the executable and interacting with the API
 
 ---
 
 ## Usage
 
-### First Launch
+### First Run
 
-1. Double-click `ccc.cmd` or run it from the console:
+1. Double-click `claude.cmd` or run it from the console:
    ```cmd
-   ccc.cmd
+   claude
    ```
-2. The script will prompt you to enter the configuration details. If you want to use the default settings (official Anthropic API, `claude-opus-4-6` model, and no extra auth tokens), simply press **Enter** on each prompt.
-3. Wait for `claude.exe` to finish downloading.
-4. When prompted to add the directory to your system `PATH`, enter `y` (yes) or `n` (no). Choosing `y` will allow you to call the client from any console folder using the `ccc` command.
+2. The script will prompt you to enter configuration parameters. If you want to use the default settings (official Anthropic API, `claude-opus-4-6` model, and no additional authorization tokens), simply press **Enter** at each prompt.
+3. Wait for the `claude.exe` download to complete.
+4. When prompted to add the directory to the system `PATH`, enter `y` (yes) or `n` (no). Choosing `y` will allow you to invoke the client from any folder in the console using the `claude` command.
 
-### Regular Launch
+### Regular Usage
 
-Once configured, you can simply run the script to start an interactive Claude Code session:
+After setup, you can simply run the script to start an interactive Claude Code session:
 ```cmd
-ccc.cmd
+claude
 ```
 
 You can also pass any standard Claude Code arguments:
 ```cmd
-ccc.cmd --version
-ccc.cmd --model claude-opus-4-6
+claude --version
+claude /fast
 ```
 
----
+### Profiles
 
-## Manual Updates and Configuration Changes
+Run with a specific profile:
+```cmd
+claude --profile work
+claude -p work
+```
 
-- If you need to change the API URL, token, or default model, open `resources\.env` in any text editor and update the values:
-  ```env
-  ANTHROPIC_BASE_URL=https://api.anthropic.com
-  ANTHROPIC_AUTH_TOKEN=your_token_here
-  MODEL=claude-opus-4-6
-  ```
-- To reset settings and go through the initial configuration steps again, simply delete `resources\.env`.
+Interactive profile selection:
+```cmd
+claude --profile
+claude -p
+```
+
+### Script Update
+
+```cmd
+claude --update-script
+claude -u
+claude -u dev
+```
+
+<div align="right">
+  <img src="https://count.getloli.com/@retopology?name=retopology&theme=rule34&padding=1&offset=0&align=center&scale=1.5&pixelated=1&darkmode=0" width="1" height="1" alt=""/>
+  <img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fretopology&label=(%E2%97%95%E2%80%BF%E2%97%95%E2%9C%BF)&labelColor=%230d1117&countColor=%2300c647" width="1" height="1" alt=""/>
+  <img src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2Fretopology&label=&icon=github&color=%230d1117&message=&style=for-the-badge&tz=UTC" width="1" height="1" alt=""/>
+</div>
