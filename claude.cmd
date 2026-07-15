@@ -1,13 +1,14 @@
-:: 1.2.0
+:: 1.2.1
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
-echo Claude Code Client - v1.2.0
+if "%~1"=="--version-script" (echo 1.2.1 & goto :eof)
+echo Claude Code Client - v1.2.1
 echo.
 
-set "CLAUDE_DIR=%~dp0claude"
+set "SCRIPT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node" & REM temporarily not in use
 
@@ -26,6 +27,7 @@ goto :eof
     call :env
     if "%~1"=="--update-script" (call :update %2 & goto :eof)
     if "%~1"=="-u" (call :update %2 & goto :eof)
+    if "%~1"=="--add-to-path" (call :add-to-path & goto :eof)
     set "PROFILE="
     set "CLAUDE_ARGS="
     call :parse_args %*
@@ -42,18 +44,22 @@ goto :eof
     goto :eof
 
 :env
-    set "PATH=!CLAUDE_DIR!\.local\bin;!NODE_DIR!;!PATH!"
-    set "USERPROFILE=!CLAUDE_DIR!"
-    set "EXE=!CLAUDE_DIR!\.local\bin\claude.exe"
-
     set "CONFIG_FILE=!RESOURCES_DIR!\settings.ini"
     if exist "!CONFIG_FILE!" (
         call :load_ini ""
     ) else (
         call :create_ini
     )
+
+    if defined CLAUDE_DIR call set "CLAUDE_DIR=!CLAUDE_DIR!"
+    if not defined CLAUDE_DIR set "CLAUDE_DIR=!SCRIPT_DIR!.claude"
+
+    set "PATH=!CLAUDE_DIR!\.local\bin;!NODE_DIR!;!PATH!"
+    set "USERPROFILE=!CLAUDE_DIR!"
+    set "EXE=!CLAUDE_DIR!\.local\bin\claude.exe"
+
     if "!ANTHROPIC_BASE_URL!"=="" set "ANTHROPIC_BASE_URL=https://api.anthropic.com"
-    if "!MODEL_NAME!"=="" set "MODEL_NAME=claude-opus-4-6"
+    if "!MODEL_NAME!"=="" set "MODEL_NAME=claude-sonnet-5"
     if "!UPDATE_MASK!"=="" set "UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd"
     goto :eof
 
@@ -84,6 +90,20 @@ goto :eof
     goto :eof
 
 :create_ini
+    set "CLAUDE_DIR="
+    if exist "!USERPROFILE!\.local\bin\claude.exe" (
+        copy "!USERPROFILE!\.local\bin\claude.exe" "!RESOURCES_DIR!" > nul
+        set "USE_INSTALLED=Y"
+        set /p "USE_INSTALLED=Claude Code is already installed on your system. Do you want to use the installed version of Claude Code? [Y/n]: "
+        if /i "!USE_INSTALLED!"=="Y" set "CLAUDE_DIR=%%USERPROFILE%%"
+    ) else (
+        set "USE_PORTABLE=Y"
+        set /p "USE_PORTABLE=Do you want to use Claude Code in portable mode? [Y/n]: "
+        if /i "!USE_PORTABLE!" NEQ "Y" set "CLAUDE_DIR=%%USERPROFILE%%"
+    )
+    if not defined CLAUDE_DIR set "CLAUDE_DIR=%%SCRIPT_DIR%%.claude"
+    echo.
+
     set "INPUT_ANTHROPIC_BASE_URL="
     set /p "INPUT_ANTHROPIC_BASE_URL=Enter ANTHROPIC_BASE_URL [https://api.anthropic.com]: "
     if "!INPUT_ANTHROPIC_BASE_URL!"=="" (
@@ -101,9 +121,9 @@ goto :eof
     )
 
     set "INPUT_MODEL_NAME="
-    set /p "INPUT_MODEL_NAME=Enter MODEL_NAME [claude-opus-4-6]: "
+    set /p "INPUT_MODEL_NAME=Enter MODEL_NAME [claude-sonnet-5]: "
     if "!INPUT_MODEL_NAME!"=="" (
-        set "MODEL_NAME=claude-opus-4-6"
+        set "MODEL_NAME=claude-sonnet-5"
     ) else (
         set "MODEL_NAME=!INPUT_MODEL_NAME!"
     )
@@ -120,6 +140,7 @@ goto :eof
         echo ANTHROPIC_BASE_URL=!ANTHROPIC_BASE_URL!
         echo ANTHROPIC_AUTH_TOKEN=!ANTHROPIC_AUTH_TOKEN!
         echo MODEL_NAME=!MODEL_NAME!
+        echo CLAUDE_DIR=!CLAUDE_DIR!
         echo UPDATE_BRANCH=!UPDATE_BRANCH!
         echo UPDATE_REPOSITORY=https://github.com/retopology/Claude-Code-Client
         echo UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd

@@ -1,5 +1,5 @@
 <h1 align="center">Claude Code Client</h1>
-<p align="center"><code>v1.2.0</code></p>
+<p align="center"><code>v1.2.1</code></p>
 <p align="center">
   English | <a href="README.ru.md">Русский</a>
 </p>
@@ -12,9 +12,9 @@ This script automates the download of the `claude.exe` executable, isolates conf
 
 ## Key Features
 
-1. **Isolated Environment (Sandbox / Portable Mode)**:
-   - The script overrides the `USERPROFILE` environment variable, pointing it to the `claude` folder inside the script's directory.
-   - All global caches, settings, authentication sessions, and Claude Code plugins are stored locally in the script's directory, keeping the global Windows user profile clean.
+1. **Portable / Isolated Mode (Default)**:
+   - The script can operate either in portable mode (overriding the `USERPROFILE` environment variable to point to the `claude` folder inside the script's directory) or in normal (non-portable) mode, using the standard global Windows user profile `%USERPROFILE%`. This allows reusing an already installed version of Claude Code and its settings.
+   - In portable mode, all global caches, settings, authentication sessions, and Claude Code plugins are stored locally in the script's directory, keeping the global Windows user profile clean.
 
 2. **Automatic Installation**:
    - On the first run, the script automatically checks for the latest version of Claude Code on Anthropic's servers, downloads it using `curl`, and sets it up in the appropriate directories.
@@ -23,7 +23,8 @@ This script automates the download of the `claude.exe` executable, isolates conf
    - On the first run, the script will prompt you to enter the following parameters:
      - `ANTHROPIC_BASE_URL` (defaults to the official API: `https://api.anthropic.com`, but you can specify your own proxy server).
      - `ANTHROPIC_AUTH_TOKEN` (authorization token, useful when using proxies or custom gateways).
-     - `MODEL_NAME` (default model, e.g., `claude-opus-4-6`, `claude-sonnet-4-6`, etc.).
+     - `MODEL_NAME` (default model, e.g., `claude-sonnet-5`).
+     - `CLAUDE_DIR` (path to the Claude Code working directory; defaults to `%SCRIPT_DIR%.claude` for portable mode, or `%USERPROFILE%` for system mode).
      - `UPDATE_BRANCH` (update branch: `main` or `dev`).
    - The configuration is saved to a local `resources\settings.ini` file and automatically loaded on subsequent runs.
 
@@ -34,7 +35,8 @@ This script automates the download of the `claude.exe` executable, isolates conf
      ```ini
       ANTHROPIC_BASE_URL=http://localhost:20128/v1
       ANTHROPIC_AUTH_TOKEN=sk-88cc84a27b153ff0-46fd23-2dcde1b5
-      MODEL_NAME=openrouter/anthropic/claude-opus-4.6
+      MODEL_NAME=openrouter/anthropic/claude-sonnet-5
+      CLAUDE_DIR=%SCRIPT_DIR%.claude
       UPDATE_BRANCH=dev
       UPDATE_REPOSITORY=https://github.com/retopology/Claude-Code-Client
       UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd
@@ -55,20 +57,21 @@ This script automates the download of the `claude.exe` executable, isolates conf
 6. **System PATH Integration**:
    - On first installation, the script checks whether its folder has been added to the user's system `Path` environment variable.
    - If not, it offers to add it automatically, first creating a registry backup in `resources\env_backup.reg` for safety.
+   - You can also manually trigger this procedure using the `--add-to-path` flag.
 
 7. **Command-Line Argument Passthrough**:
-   - All arguments except `--profile`/`-p` and `--update-script`/`-u` are passed directly to the underlying executable (e.g., `claude /fast` or `claude --help`).
+   - All arguments except those intercepted by the script (`--profile`/`-p`, `--update-script`/`-u`, `--add-to-path`, and `--version-script`) are passed directly to the underlying executable (e.g., `claude /fast` or `claude --help`).
 
 ---
 
 ## Directory Structure After Setup
 
-After the first run, the script will create the following directory structure:
+After the first run, the script will create the following directory structure (when using the default portable mode):
 
 ```text
-📁 Your_Folder/
+📁 /
 ├── 📄 claude.cmd       # Startup script
-├── 📁 claude/          # Local USERPROFILE (isolated environment)
+├── 📁 .claude/         # Local USERPROFILE (isolated environment, created only in portable mode)
 │   ├── 📁 .claude/     # Configurations, cache, session history, and plugins
 │   └── 📁 .local/
 │       ├── 📁 bin/                    # Active claude.exe binary
@@ -98,9 +101,10 @@ After the first run, the script will create the following directory structure:
    ```cmd
    claude
    ```
-2. The script will prompt you to enter configuration parameters. If you want to use the default settings (official Anthropic API, `claude-opus-4-6` model, and no additional authorization tokens), simply press **Enter** at each prompt.
-3. Wait for the `claude.exe` download to complete.
-4. When prompted to add the directory to the system `PATH`, enter `y` (yes) or `n` (no). Choosing `y` will allow you to invoke the client from any folder in the console using the `claude` command.
+2. The script will check if Claude Code is installed. If it is already installed on your system, you will be prompted to use the installed version or configure portable mode. Otherwise, it will offer to configure portable mode (default).
+3. The script will prompt you to enter configuration parameters. You can also use the default settings simply by pressing **Enter** at each prompt.
+4. Wait for the `claude.exe` download to complete (unless the already installed system version was selected).
+5. When prompted to add the directory to the system `PATH`, enter `y` (yes) or `n` (no). Choosing `y` will allow you to invoke the client from any folder in the console using the `claude` command.
 
 ### Regular Usage
 
@@ -127,6 +131,20 @@ Interactive profile selection:
 ```cmd
 claude --profile
 claude -p
+```
+
+### Manual PATH Integration
+
+You can manually add the directory containing the script to the user's system PATH at any time:
+```cmd
+claude --add-to-path
+```
+
+### Script Version
+
+To quickly output the version of the client script itself (without launching Claude Code):
+```cmd
+claude --version-script
 ```
 
 ### Script Update
