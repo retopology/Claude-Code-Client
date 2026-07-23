@@ -1,11 +1,11 @@
-:: 1.2.1
+:: 1.2.2-dev.1
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
-if "%~1"=="--version-script" (echo 1.2.1 & goto :eof)
-echo Claude Code Client - v1.2.1
+if "%~1"=="--version-script" (echo 1.2.2-dev.1 & goto :eof)
+echo Claude Code Client - v1.2.2-dev.1
 echo.
 
 set "SCRIPT_DIR=%~dp0"
@@ -281,7 +281,7 @@ goto :eof
         )
     ) else (
         set "LATEST_LOCAL="
-        for /f "delims=" %%v in ('dir /b /a-d /o-d "!CLAUDE_DIR!\.local\share\claude\versions" 2^>nul') do (
+        for /f "delims=" %%v in ('dir /b /a-d /o-d /t:c "!CLAUDE_DIR!\.local\share\claude\versions" 2^>nul') do (
             if not defined LATEST_LOCAL (
                 set "LATEST_LOCAL=%%v"
             )
