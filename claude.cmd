@@ -1,11 +1,11 @@
-:: 1.2.2-dev.1
+:: 1.2.2-dev.2
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
-if "%~1"=="--version-script" (echo 1.2.2-dev.1 & goto :eof)
-echo Claude Code Client - v1.2.2-dev.1
+if "%~1"=="--version-script" (echo 1.2.2-dev.2 & goto :eof)
+echo Claude Code Client - v1.2.2-dev.2
 echo.
 
 set "SCRIPT_DIR=%~dp0"
@@ -28,6 +28,7 @@ goto :eof
     if "%~1"=="--update-script" (call :update %2 & goto :eof)
     if "%~1"=="-u" (call :update %2 & goto :eof)
     if "%~1"=="--add-to-path" (call :add-to-path & goto :eof)
+    if "%~1"=="--config" (start "" "!CONFIG_FILE!" & set "EXIT_IMMEDIATELY=1" & goto :eof)
     set "PROFILE="
     set "CLAUDE_ARGS="
     call :parse_args %*
@@ -141,6 +142,7 @@ goto :eof
         echo ANTHROPIC_AUTH_TOKEN=!ANTHROPIC_AUTH_TOKEN!
         echo MODEL_NAME=!MODEL_NAME!
         echo CLAUDE_DIR=!CLAUDE_DIR!
+        echo CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
         echo UPDATE_BRANCH=!UPDATE_BRANCH!
         echo UPDATE_REPOSITORY=https://github.com/retopology/Claude-Code-Client
         echo UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd
