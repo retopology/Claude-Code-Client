@@ -1,22 +1,123 @@
-:: 1.2.2-dev.2
+:: 1.2.2-dev.3
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
-if "%~1"=="--version-script" (echo 1.2.2-dev.2 & goto :eof)
-echo Claude Code Client - v1.2.2-dev.2
-echo.
 
+set "VERSION_STR=1.2.2-dev.3"
 set "SCRIPT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
-set "NODE_DIR=%~dp0node" & REM temporarily not in use
+set "NODE_DIR=%~dp0node"
+
+set "ACTION_VERSION_SCRIPT="
+set "ACTION_ADD_TO_PATH="
+set "ACTION_UPDATE_SCRIPT="
+set "UPDATE_BRANCH_VALUE="
+set "ACTION_CONFIG="
+set "ACTION_PICK_PROFILE="
+set "PROFILE="
+set "CLAUDE_ARGS="
+
+:parse_args_loop
+    set "test_arg="
+    set "test_arg=%1"
+    if not defined test_arg goto :parse_args_done
+
+    set "_ARG=%~1"
+
+    if /i "!_ARG!"=="--version-script" (
+        set "ACTION_VERSION_SCRIPT=1"
+        shift
+        goto :parse_args_loop
+    )
+
+    if /i "!_ARG!"=="--add-to-path" (
+        set "ACTION_ADD_TO_PATH=1"
+        shift
+        goto :parse_args_loop
+    )
+
+    if /i "!_ARG!"=="--config" (
+        set "ACTION_CONFIG=1"
+        shift
+        goto :parse_args_loop
+    )
+
+    if /i "!_ARG!"=="--update-script" goto :parse_update_arg
+    if /i "!_ARG!"=="-u"              goto :parse_update_arg
+    if /i "!_ARG!"=="--profile"       goto :parse_profile_arg
+
+    set "CURRENT_ARG="
+    set "CURRENT_ARG=%1"
+    if defined CLAUDE_ARGS (
+        set "CLAUDE_ARGS=!CLAUDE_ARGS! !CURRENT_ARG!"
+    ) else (
+        set "CLAUDE_ARGS=!CURRENT_ARG!"
+    )
+    shift
+    goto :parse_args_loop
+
+:parse_update_arg
+    set "ACTION_UPDATE_SCRIPT=1"
+    shift
+    if "%~1"=="" goto :parse_args_loop
+    set "next_arg=%~1"
+    if "!next_arg:~0,1!"=="-" goto :parse_args_loop
+    set "UPDATE_BRANCH_VALUE=%~1"
+    shift
+    goto :parse_args_loop
+
+:parse_profile_arg
+    shift
+    if "%~1"=="" (
+        set "ACTION_PICK_PROFILE=1"
+        goto :parse_args_loop
+    )
+    set "next_arg=%~1"
+    if "!next_arg:~0,1!"=="-" if not "!next_arg!"=="-" (
+        set "ACTION_PICK_PROFILE=1"
+        goto :parse_args_loop
+    )
+    set "PROFILE=%~1"
+    shift
+    goto :parse_args_loop
+
+:parse_args_done
+
+if defined ACTION_VERSION_SCRIPT (
+    echo !VERSION_STR!
+    goto :eof
+)
+
+echo Claude Code Client - v!VERSION_STR!
+echo.
 
 if not exist "!RESOURCES_DIR!" mkdir "!RESOURCES_DIR!"
 if exist "updater.cmd" del "updater.cmd"
 
-call :main %*
-if "!EXIT_IMMEDIATELY!"=="1" goto :eof
+call :env
+
+if defined ACTION_ADD_TO_PATH (
+    call :add_to_path
+    goto :exit
+)
+
+if defined ACTION_UPDATE_SCRIPT (
+    call :update "!UPDATE_BRANCH_VALUE!"
+    goto :exit
+)
+
+if defined ACTION_CONFIG (
+    start "" "!CONFIG_FILE!"
+    goto :exit
+)
+
+if defined ACTION_PICK_PROFILE (
+    call :pick_profile
+)
+
+call :main
 echo.
 echo Thank you for using Claude Code Client ~
 echo.
@@ -24,14 +125,6 @@ pause
 goto :eof
 
 :main
-    call :env
-    if "%~1"=="--update-script" (call :update %2 & goto :eof)
-    if "%~1"=="-u" (call :update %2 & goto :eof)
-    if "%~1"=="--add-to-path" (call :add-to-path & goto :eof)
-    if "%~1"=="--config" (start "" "!CONFIG_FILE!" & set "EXIT_IMMEDIATELY=1" & goto :eof)
-    set "PROFILE="
-    set "CLAUDE_ARGS="
-    call :parse_args %*
     if defined PROFILE (
         call :load_ini "!PROFILE!"
         if "!SECTION_FOUND!"=="0" (
@@ -41,7 +134,6 @@ goto :eof
     )
     call :install
     call :claude
-    call :exit
     goto :eof
 
 :env
@@ -215,30 +307,11 @@ goto :eof
         powershell -NoProfile -Command "[System.IO.File]::WriteAllBytes($env:OUTFILE, [Convert]::FromBase64String((Get-Content -LiteralPath $env:TMPFILE -Raw)))"
         if exist "!TMPFILE!" del "!TMPFILE!"
         start cmd /c "call "%~dp0updater.cmd" "%~f0" "!LATEST_FILE!" "!RESOURCES_DIR!" "!CURRENT_VERSION!""
-        set "EXIT_IMMEDIATELY=1"
     ) else (
         echo You already have the latest version: !LATEST_VERSION!
         if exist "!LATEST_FILE!" del "!LATEST_FILE!"
     )
     goto :eof
-
-:parse_args
-    if "%~1"=="" goto :eof
-    if "%~1"=="--profile" (
-        if "%~2"=="" (call :pick_profile & shift & goto :parse_args)
-        set "_ARG=%~2"
-        if "!_ARG:~0,1!"=="-" (call :pick_profile & shift & goto :parse_args)
-        set "PROFILE=%~2" & shift & shift & goto :parse_args
-    )
-    if "%~1"=="-p" (
-        if "%~2"=="" (call :pick_profile & shift & goto :parse_args)
-        set "_ARG=%~2"
-        if "!_ARG:~0,1!"=="-" (call :pick_profile & shift & goto :parse_args)
-        set "PROFILE=%~2" & shift & shift & goto :parse_args
-    )
-    if defined CLAUDE_ARGS (set "CLAUDE_ARGS=!CLAUDE_ARGS! %1") else (set "CLAUDE_ARGS=%1")
-    shift
-    goto :parse_args
 
 :pick_profile
     set "_N=0"
