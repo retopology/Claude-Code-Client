@@ -1,11 +1,11 @@
-:: 1.2.2-dev.5
+:: 1.2.2-dev.6
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_STR=1.2.2-dev.5"
+set "VERSION_STR=1.2.2-dev.6"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -167,7 +167,7 @@ goto :eof
             if "!TARGET_SECTION!"=="" (
                 goto :load_ini_done
             ) else (
-                if "!line!"=="[!TARGET_SECTION!]" (set "IN_SECTION=1" & set "SECTION_FOUND=1") else (set "IN_SECTION=0")
+                if /i "!line!"=="[!TARGET_SECTION!]" (set "IN_SECTION=1" & set "SECTION_FOUND=1") else (set "IN_SECTION=0")
             )
         )
         if not "!line:~0,1!"=="#" if not "!line:~0,1!"=="[" (
