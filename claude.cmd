@@ -1,11 +1,11 @@
-:: 1.2.2-dev.3
+:: 1.2.2-dev.4
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_STR=1.2.2-dev.3"
+set "VERSION_STR=1.2.2-dev.4"
 set "SCRIPT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -18,6 +18,7 @@ set "ACTION_CONFIG="
 set "ACTION_PICK_PROFILE="
 set "PROFILE="
 set "CLAUDE_ARGS="
+set "ARGUMENTS="
 
 :parse_args_loop
     set "test_arg="
@@ -233,11 +234,13 @@ goto :eof
         echo ANTHROPIC_BASE_URL=!ANTHROPIC_BASE_URL!
         echo ANTHROPIC_AUTH_TOKEN=!ANTHROPIC_AUTH_TOKEN!
         echo MODEL_NAME=!MODEL_NAME!
+        echo ARGUMENTS=
         echo CLAUDE_DIR=!CLAUDE_DIR!
         echo CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
-        echo UPDATE_BRANCH=!UPDATE_BRANCH!
+        echo.
         echo UPDATE_REPOSITORY=https://github.com/retopology/Claude-Code-Client
         echo UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd
+        echo UPDATE_BRANCH=!UPDATE_BRANCH!
     ) > "!CONFIG_FILE!"
     goto :eof
 
@@ -315,7 +318,6 @@ goto :eof
 
 :pick_profile
     set "_N=0"
-    echo   0. default
     for /f "usebackq delims=" %%A in ("!CONFIG_FILE!") do (
         set "_line=%%A"
         if "!_line:~0,1!"=="[" (
@@ -328,10 +330,12 @@ goto :eof
     if "!_N!"=="0" (
         echo No profiles found in settings.ini
         goto :eof
+    ) else (
+        echo   0. default
     )
     echo.
     set "_CHOICE="
-    set /p "_CHOICE=Select profile [1-!_N!]: "
+    set /p "_CHOICE=Select profile [0-!_N!]: "
     echo.
     if "!_CHOICE!"=="" goto :eof
     if "!_CHOICE!"=="0" goto :eof
@@ -437,7 +441,7 @@ goto :eof
     goto :eof
 
 :claude
-    "!EXE!" --model "!MODEL_NAME!" !CLAUDE_ARGS!
+    "!EXE!" --model "!MODEL_NAME!" !CLAUDE_ARGS! !ARGUMENTS!
     goto :eof
 
 :exit
