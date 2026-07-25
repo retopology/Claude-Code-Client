@@ -1,11 +1,11 @@
-:: 1.2.2-dev.7
+:: 1.2.3-dev.1
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.2.2-dev.7"
+set "VERSION_CLIENT=1.2.3-dev.1"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -13,12 +13,14 @@ set "NODE_DIR=%~dp0node"
 set "ACTION_VERSION_CLIENT="
 set "ACTION_ADD_TO_PATH="
 set "ACTION_UPDATE_CLIENT="
+set "ACTION_SYNC_RES="
 set "UPDATE_BRANCH_VALUE="
 set "ACTION_CONFIG="
 set "ACTION_PICK_PROFILE="
 set "PROFILE="
 set "CLAUDE_ARGS="
 set "ARGUMENTS="
+set "RESOURCES_SYNCHRONIZATION="
 
 :parse_args_loop
     set "test_arg="
@@ -41,6 +43,12 @@ set "ARGUMENTS="
 
     if /i "!_ARG!"=="--config" (
         set "ACTION_CONFIG=1"
+        shift
+        goto :parse_args_loop
+    )
+
+    if /i "!_ARG!"=="--sync-res" (
+        set "ACTION_SYNC_RES=1"
         shift
         goto :parse_args_loop
     )
@@ -104,6 +112,11 @@ if defined ACTION_ADD_TO_PATH (
     goto :exit
 )
 
+if defined ACTION_SYNC_RES (
+    call :synchronize_resources
+    goto :exit
+)
+
 if defined ACTION_UPDATE_CLIENT (
     call :update "!UPDATE_BRANCH_VALUE!"
     goto :exit
@@ -154,6 +167,7 @@ goto :eof
 
     if "!ANTHROPIC_BASE_URL!"=="" set "ANTHROPIC_BASE_URL=https://api.anthropic.com"
     if "!ANTHROPIC_DEFAULT_MODEL!"=="" set "ANTHROPIC_DEFAULT_MODEL=claude-sonnet-5"
+    if "!RESOURCES_SYNCHRONIZATION!"=="" set "RESOURCES_SYNCHRONIZATION=0"
     if "!UPDATE_MASK!"=="" set "UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd"
     goto :eof
 
@@ -237,9 +251,10 @@ goto :eof
         echo ANTHROPIC_DEFAULT_HAIKU_MODEL=
         echo CLAUDE_CODE_SUBAGENT_MODEL=
         echo ARGUMENTS=
-        echo CLAUDE_DIR=!CLAUDE_DIR!
-        echo CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
         echo.
+        echo CLAUDE_DIR=!CLAUDE_DIR!
+        echo RESOURCES_SYNCHRONIZATION=0
+        echo CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
         echo UPDATE_REPOSITORY=https://github.com/retopology/Claude-Code-Client
         echo UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd
         echo UPDATE_BRANCH=!UPDATE_BRANCH!
@@ -361,22 +376,26 @@ goto :eof
             call :add_to_path
         )
     ) else (
-        set "LATEST_LOCAL="
-        for /f "delims=" %%v in ('dir /b /a-d /o-d /t:c "!CLAUDE_DIR!\.local\share\claude\versions" 2^>nul') do (
-            if not defined LATEST_LOCAL (
-                set "LATEST_LOCAL=%%v"
+        if "!RESOURCES_SYNCHRONIZATION!"=="1" call :synchronize_resources
+    )
+    goto :eof
+
+:synchronize_resources
+    set "LATEST_LOCAL="
+    for /f "delims=" %%v in ('dir /b /a-d /o-d /t:c "!CLAUDE_DIR!\.local\share\claude\versions" 2^>nul') do (
+        if not defined LATEST_LOCAL (
+            set "LATEST_LOCAL=%%v"
+        )
+    )
+    if defined LATEST_LOCAL (
+        set "RES_VERSION="
+        if exist "!RESOURCES_DIR!\claude.exe" (
+            for /f "tokens=1" %%v in ('"!RESOURCES_DIR!\claude.exe" -v 2^>nul') do (
+                set "RES_VERSION=%%v"
             )
         )
-        if defined LATEST_LOCAL (
-            set "RES_VERSION="
-            if exist "!RESOURCES_DIR!\claude.exe" (
-                for /f "tokens=1" %%v in ('"!RESOURCES_DIR!\claude.exe" -v 2^>nul') do (
-                    set "RES_VERSION=%%v"
-                )
-            )
-            if "!LATEST_LOCAL!" NEQ "!RES_VERSION!" (
-                copy "!CLAUDE_DIR!\.local\share\claude\versions\!LATEST_LOCAL!" "!RESOURCES_DIR!\claude.exe" >nul
-            )
+        if "!LATEST_LOCAL!" NEQ "!RES_VERSION!" (
+            copy "!CLAUDE_DIR!\.local\share\claude\versions\!LATEST_LOCAL!" "!RESOURCES_DIR!\claude.exe" >nul
         )
     )
     goto :eof
