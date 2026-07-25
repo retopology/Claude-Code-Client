@@ -1,11 +1,11 @@
-:: 1.2.2-dev.6
+:: 1.2.2-dev.7
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_STR=1.2.2-dev.6"
+set "VERSION_CLIENT=1.2.2-dev.7"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -87,15 +87,15 @@ set "ARGUMENTS="
 :parse_args_done
 
 if defined ACTION_VERSION_CLIENT (
-    echo !VERSION_STR!
+    echo !VERSION_CLIENT!
     goto :eof
 )
 
-echo Claude Code Client - v!VERSION_STR!
+echo Claude Code Client - v!VERSION_CLIENT!
 echo.
 
+if exist "%~dp0updater.cmd" del "%~dp0updater.cmd"
 if not exist "!RESOURCES_DIR!" mkdir "!RESOURCES_DIR!"
-if exist "updater.cmd" del "updater.cmd"
 
 call :env
 
@@ -153,7 +153,7 @@ goto :eof
     set "EXE=!CLAUDE_DIR!\.local\bin\claude.exe"
 
     if "!ANTHROPIC_BASE_URL!"=="" set "ANTHROPIC_BASE_URL=https://api.anthropic.com"
-    if "!MODEL_NAME!"=="" set "MODEL_NAME=claude-sonnet-5"
+    if "!ANTHROPIC_DEFAULT_MODEL!"=="" set "ANTHROPIC_DEFAULT_MODEL=claude-sonnet-5"
     if "!UPDATE_MASK!"=="" set "UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd"
     goto :eof
 
@@ -214,12 +214,12 @@ goto :eof
         set "ANTHROPIC_AUTH_TOKEN=!INPUT_ANTHROPIC_AUTH_TOKEN!"
     )
 
-    set "INPUT_MODEL_NAME="
-    set /p "INPUT_MODEL_NAME=Enter MODEL_NAME [claude-sonnet-5]: "
-    if "!INPUT_MODEL_NAME!"=="" (
-        set "MODEL_NAME=claude-sonnet-5"
+    set "INPUT_ANTHROPIC_DEFAULT_MODEL="
+    set /p "INPUT_ANTHROPIC_DEFAULT_MODEL=Enter ANTHROPIC_DEFAULT_MODEL [claude-sonnet-5]: "
+    if "!INPUT_ANTHROPIC_DEFAULT_MODEL!"=="" (
+        set "ANTHROPIC_DEFAULT_MODEL=claude-sonnet-5"
     ) else (
-        set "MODEL_NAME=!INPUT_MODEL_NAME!"
+        set "ANTHROPIC_DEFAULT_MODEL=!INPUT_ANTHROPIC_DEFAULT_MODEL!"
     )
 
     set "INPUT_BRANCH="
@@ -233,7 +233,9 @@ goto :eof
     (
         echo ANTHROPIC_BASE_URL=!ANTHROPIC_BASE_URL!
         echo ANTHROPIC_AUTH_TOKEN=!ANTHROPIC_AUTH_TOKEN!
-        echo MODEL_NAME=!MODEL_NAME!
+        echo ANTHROPIC_DEFAULT_MODEL=!ANTHROPIC_DEFAULT_MODEL!
+        echo ANTHROPIC_DEFAULT_HAIKU_MODEL=
+        echo CLAUDE_CODE_SUBAGENT_MODEL=
         echo ARGUMENTS=
         echo CLAUDE_DIR=!CLAUDE_DIR!
         echo CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
@@ -441,7 +443,7 @@ goto :eof
     goto :eof
 
 :claude
-    "!EXE!" --model "!MODEL_NAME!" !CLAUDE_ARGS! !ARGUMENTS!
+    "!EXE!" --model "!ANTHROPIC_DEFAULT_MODEL!" !CLAUDE_ARGS! !ARGUMENTS!
     goto :eof
 
 :exit
