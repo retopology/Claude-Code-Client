@@ -1,18 +1,18 @@
-:: 1.2.2-dev.4
+:: 1.2.2-dev.5
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_STR=1.2.2-dev.4"
-set "SCRIPT_DIR=%~dp0"
+set "VERSION_STR=1.2.2-dev.5"
+set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
 
-set "ACTION_VERSION_SCRIPT="
+set "ACTION_VERSION_CLIENT="
 set "ACTION_ADD_TO_PATH="
-set "ACTION_UPDATE_SCRIPT="
+set "ACTION_UPDATE_CLIENT="
 set "UPDATE_BRANCH_VALUE="
 set "ACTION_CONFIG="
 set "ACTION_PICK_PROFILE="
@@ -27,8 +27,8 @@ set "ARGUMENTS="
 
     set "_ARG=%~1"
 
-    if /i "!_ARG!"=="--version-script" (
-        set "ACTION_VERSION_SCRIPT=1"
+    if /i "!_ARG!"=="--version-client" (
+        set "ACTION_VERSION_CLIENT=1"
         shift
         goto :parse_args_loop
     )
@@ -45,7 +45,7 @@ set "ARGUMENTS="
         goto :parse_args_loop
     )
 
-    if /i "!_ARG!"=="--update-script" goto :parse_update_arg
+    if /i "!_ARG!"=="--update-client" goto :parse_update_arg
     if /i "!_ARG!"=="-u"              goto :parse_update_arg
     if /i "!_ARG!"=="--profile"       goto :parse_profile_arg
 
@@ -60,7 +60,7 @@ set "ARGUMENTS="
     goto :parse_args_loop
 
 :parse_update_arg
-    set "ACTION_UPDATE_SCRIPT=1"
+    set "ACTION_UPDATE_CLIENT=1"
     shift
     if "%~1"=="" goto :parse_args_loop
     set "next_arg=%~1"
@@ -86,7 +86,7 @@ set "ARGUMENTS="
 
 :parse_args_done
 
-if defined ACTION_VERSION_SCRIPT (
+if defined ACTION_VERSION_CLIENT (
     echo !VERSION_STR!
     goto :eof
 )
@@ -104,7 +104,7 @@ if defined ACTION_ADD_TO_PATH (
     goto :exit
 )
 
-if defined ACTION_UPDATE_SCRIPT (
+if defined ACTION_UPDATE_CLIENT (
     call :update "!UPDATE_BRANCH_VALUE!"
     goto :exit
 )
@@ -146,7 +146,7 @@ goto :eof
     )
 
     if defined CLAUDE_DIR call set "CLAUDE_DIR=!CLAUDE_DIR!"
-    if not defined CLAUDE_DIR set "CLAUDE_DIR=!SCRIPT_DIR!.claude"
+    if not defined CLAUDE_DIR set "CLAUDE_DIR=!CLIENT_DIR!.claude"
 
     set "PATH=!CLAUDE_DIR!\.local\bin;!NODE_DIR!;!PATH!"
     set "USERPROFILE=!CLAUDE_DIR!"
@@ -195,7 +195,7 @@ goto :eof
         set /p "USE_PORTABLE=Do you want to use Claude Code in portable mode? [Y/n]: "
         if /i "!USE_PORTABLE!" NEQ "Y" set "CLAUDE_DIR=%%USERPROFILE%%"
     )
-    if not defined CLAUDE_DIR set "CLAUDE_DIR=%%SCRIPT_DIR%%.claude"
+    if not defined CLAUDE_DIR set "CLAUDE_DIR=%%CLIENT_DIR%%.claude"
     echo.
 
     set "INPUT_ANTHROPIC_BASE_URL="
@@ -407,8 +407,8 @@ goto :eof
     goto :eof
 
 :add_to_path
-    set "SCRIPT_DIR=%~dp0"
-    set "SCRIPT_DIR=!SCRIPT_DIR:~0,-1!"
+    set "CLIENT_DIR=%~dp0"
+    set "CLIENT_DIR=!CLIENT_DIR:~0,-1!"
     set "IN_PATH=0"
     set "REG_PATH="
 
@@ -417,11 +417,11 @@ goto :eof
     )
 
     if defined REG_PATH (
-        echo "!REG_PATH!;" | findstr /I /C:"!SCRIPT_DIR!;" >nul && set "IN_PATH=1"
+        echo "!REG_PATH!;" | findstr /I /C:"!CLIENT_DIR!;" >nul && set "IN_PATH=1"
     )
 
     if "!IN_PATH!"=="0" (
-        echo !SCRIPT_DIR!
+        echo !CLIENT_DIR!
         set /p "ADD_TO_PATH=Do you want to add it to the user's system PATH environment variable? [y/N]: "
         if /i "!ADD_TO_PATH!"=="Y" (
             reg export "HKCU\Environment" "!RESOURCES_DIR!\env_backup.reg" /y >nul
@@ -430,9 +430,9 @@ goto :eof
                 goto :eof
             )
             if defined REG_PATH (
-                reg add "HKCU\Environment" /v Path /t REG_EXPAND_SZ /d "!SCRIPT_DIR!;!REG_PATH!" /f >nul
+                reg add "HKCU\Environment" /v Path /t REG_EXPAND_SZ /d "!CLIENT_DIR!;!REG_PATH!" /f >nul
             ) else (
-                reg add "HKCU\Environment" /v Path /t REG_EXPAND_SZ /d "!SCRIPT_DIR!" /f >nul
+                reg add "HKCU\Environment" /v Path /t REG_EXPAND_SZ /d "!CLIENT_DIR!" /f >nul
             )
             echo Path added successfully.
             echo.
