@@ -1,11 +1,11 @@
-:: 1.2.3-dev.1
+:: 1.2.3-dev.2
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.2.3-dev.1"
+set "VERSION_CLIENT=1.2.3-dev.2"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -135,8 +135,8 @@ call :main
 echo.
 echo Thank you for using Claude Code Client ~
 echo.
-pause
-goto :eof
+timeout /t 1 >nul
+goto :exit
 
 :main
     if defined PROFILE (
@@ -200,7 +200,7 @@ goto :eof
 :create_ini
     set "CLAUDE_DIR="
     if exist "!USERPROFILE!\.local\bin\claude.exe" (
-        copy "!USERPROFILE!\.local\bin\claude.exe" "!RESOURCES_DIR!" > nul
+        copy "!USERPROFILE!\.local\bin\claude.exe" "!RESOURCES_DIR!" >nul
         set "USE_INSTALLED=Y"
         set /p "USE_INSTALLED=Claude Code is already installed on your system. Do you want to use the installed version of Claude Code? [Y/n]: "
         if /i "!USE_INSTALLED!"=="Y" set "CLAUDE_DIR=%%USERPROFILE%%"
