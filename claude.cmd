@@ -1,11 +1,11 @@
-:: 1.2.3-dev.3
+:: 1.2.3-dev.4
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.2.3-dev.3"
+set "VERSION_CLIENT=1.2.3-dev.4"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -22,6 +22,7 @@ set "PROFILE="
 set "CLAUDE_ARGS="
 set "ARGUMENTS="
 set "RESOURCES_SYNCHRONIZATION="
+set "OVERRIDE_COUNT=0"
 
 set "FIRST_ARG=%~1"
 
@@ -65,6 +66,7 @@ set "FIRST_ARG=%~1"
     if /i "!_ARG!"=="--update-client" goto :parse_update_arg
     if /i "!_ARG!"=="-u"              goto :parse_update_arg
     if /i "!_ARG!"=="--profile"       goto :parse_profile_arg
+    if /i "!_ARG!"=="--set"           goto :parse_set_arg
 
     set "CURRENT_ARG="
     set "CURRENT_ARG=%1"
@@ -101,6 +103,14 @@ set "FIRST_ARG=%~1"
     shift
     goto :parse_args_loop
 
+:parse_set_arg
+    shift
+    if "%~1"=="" goto :parse_args_loop
+    set /a "OVERRIDE_COUNT+=1"
+    set "OVERRIDE_!OVERRIDE_COUNT!=%~1"
+    shift
+    goto :parse_args_loop
+
 :parse_args_done
 
 if defined ACTION_VERSION_CLIENT (
@@ -115,6 +125,7 @@ if exist "%~dp0updater.cmd" del "%~dp0updater.cmd"
 if not exist "!RESOURCES_DIR!" mkdir "!RESOURCES_DIR!"
 
 call :env
+call :apply_overrides
 
 if defined ACTION_ADD_TO_PATH (
     call :add_to_path
@@ -154,9 +165,17 @@ goto :exit
             echo Error: Profile "!PROFILE!" not found in settings.ini
             goto :eof
         )
+        call :apply_overrides
     )
     call :install
     call :claude
+    goto :eof
+
+:apply_overrides
+    if "!OVERRIDE_COUNT!"=="0" goto :eof
+    for /l %%i in (1,1,!OVERRIDE_COUNT!) do (
+        for /f "tokens=1* delims==" %%K in ("!OVERRIDE_%%i!") do set "%%K=%%L"
+    )
     goto :eof
 
 :env
