@@ -1,11 +1,11 @@
-:: 1.2.3-dev.2
+:: 1.2.3-dev.3
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.2.3-dev.2"
+set "VERSION_CLIENT=1.2.3-dev.3"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -17,10 +17,13 @@ set "ACTION_SYNC_RES="
 set "UPDATE_BRANCH_VALUE="
 set "ACTION_CONFIG="
 set "ACTION_PICK_PROFILE="
+set "ACTION_NO_ARGUMENTS="
 set "PROFILE="
 set "CLAUDE_ARGS="
 set "ARGUMENTS="
 set "RESOURCES_SYNCHRONIZATION="
+
+set "FIRST_ARG=%~1"
 
 :parse_args_loop
     set "test_arg="
@@ -49,6 +52,12 @@ set "RESOURCES_SYNCHRONIZATION="
 
     if /i "!_ARG!"=="--sync-res" (
         set "ACTION_SYNC_RES=1"
+        shift
+        goto :parse_args_loop
+    )
+
+    if /i "!_ARG!"=="--no-arguments" (
+        set "ACTION_NO_ARGUMENTS=1"
         shift
         goto :parse_args_loop
     )
@@ -96,7 +105,7 @@ set "RESOURCES_SYNCHRONIZATION="
 
 if defined ACTION_VERSION_CLIENT (
     echo !VERSION_CLIENT!
-    goto :eof
+    goto :exit
 )
 
 echo Claude Code Client - v!VERSION_CLIENT!
@@ -123,7 +132,7 @@ if defined ACTION_UPDATE_CLIENT (
 )
 
 if defined ACTION_CONFIG (
-    start "" "!CONFIG_FILE!"
+    explorer "!CONFIG_FILE!"
     goto :exit
 )
 
@@ -462,6 +471,8 @@ goto :exit
     goto :eof
 
 :claude
+    if defined ACTION_NO_ARGUMENTS set "ARGUMENTS="
+    if defined FIRST_ARG if not "!FIRST_ARG:~0,1!"=="-" set "ARGUMENTS="
     "!EXE!" --model "!ANTHROPIC_DEFAULT_MODEL!" !CLAUDE_ARGS! !ARGUMENTS!
     goto :eof
 
