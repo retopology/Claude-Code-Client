@@ -1,11 +1,11 @@
-:: 1.2.3-dev.5
+:: 1.2.3-dev.6
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.2.3-dev.5"
+set "VERSION_CLIENT=1.2.3-dev.6"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -150,6 +150,7 @@ if defined ACTION_CONFIG (
 
 if defined ACTION_PICK_PROFILE (
     call :pick_profile
+    if not defined _CHOICE goto :exit
 )
 
 call :main
@@ -383,7 +384,7 @@ goto :exit
     set "_CHOICE="
     set /p "_CHOICE=Select profile [0-!_N!]: "
     echo.
-    if "!_CHOICE!"=="" goto :eof
+    if not defined _CHOICE goto :eof
     if "!_CHOICE!"=="0" goto :eof
     if !_CHOICE! LSS 0 (echo Invalid selection. & goto :pick_profile)
     if !_CHOICE! GTR !_N! (echo Invalid selection. & goto :pick_profile)
