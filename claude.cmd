@@ -1,11 +1,11 @@
-:: 1.2.3-dev.4
+:: 1.2.3-dev.5
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.2.3-dev.4"
+set "VERSION_CLIENT=1.2.3-dev.5"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -66,6 +66,7 @@ set "FIRST_ARG=%~1"
     if /i "!_ARG!"=="--update-client" goto :parse_update_arg
     if /i "!_ARG!"=="-u"              goto :parse_update_arg
     if /i "!_ARG!"=="--profile"       goto :parse_profile_arg
+    if /i "!_ARG!"=="-pr"             goto :parse_profile_arg
     if /i "!_ARG!"=="--set"           goto :parse_set_arg
 
     set "CURRENT_ARG="
