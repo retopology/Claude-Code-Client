@@ -1,14 +1,16 @@
-:: 1.2.3-dev.6
+:: 1.3.0-dev.1
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.2.3-dev.6"
+set "VERSION_CLIENT=1.3.0-dev.1"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
+set "NPM_CONFIG_PREFIX=%NODE_DIR%\npm-global"
+set "NPM_CONFIG_CACHE=%NODE_DIR%\npm-cache"
 
 set "ACTION_VERSION_CLIENT="
 set "ACTION_ADD_TO_PATH="
@@ -191,7 +193,7 @@ goto :exit
     if defined CLAUDE_DIR call set "CLAUDE_DIR=!CLAUDE_DIR!"
     if not defined CLAUDE_DIR set "CLAUDE_DIR=!CLIENT_DIR!.claude"
 
-    set "PATH=!CLAUDE_DIR!\.local\bin;!NODE_DIR!;!PATH!"
+    set "PATH=!CLAUDE_DIR!\.local\bin;%NPM_CONFIG_PREFIX%;!NODE_DIR!;!PATH!"
     set "USERPROFILE=!CLAUDE_DIR!"
     set "EXE=!CLAUDE_DIR!\.local\bin\claude.exe"
 
