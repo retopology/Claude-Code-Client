@@ -1,11 +1,11 @@
-:: 1.3.0-dev.2
+:: 1.3.0-dev.3
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.3.0-dev.2"
+set "VERSION_CLIENT=1.3.0-dev.3"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -121,14 +121,19 @@ if defined ACTION_VERSION_CLIENT (
     goto :exit
 )
 
-echo Claude Code Client - v!VERSION_CLIENT!
-echo.
-
 if exist "%~dp0updater.cmd" del "%~dp0updater.cmd"
 if not exist "!RESOURCES_DIR!" mkdir "!RESOURCES_DIR!"
 
 call :env
 call :apply_overrides
+
+if defined ACTION_CONFIG (
+    explorer "!CONFIG_FILE!"
+    goto :exit
+)
+
+echo Claude Code Client - v!VERSION_CLIENT!
+echo.
 
 if defined ACTION_ADD_TO_PATH (
     call :add_to_path
@@ -142,11 +147,6 @@ if defined ACTION_SYNC_RES (
 
 if defined ACTION_UPDATE_CLIENT (
     call :update "!UPDATE_BRANCH_VALUE!"
-    goto :exit
-)
-
-if defined ACTION_CONFIG (
-    explorer "!CONFIG_FILE!"
     goto :exit
 )
 
@@ -194,7 +194,7 @@ goto :exit
     set "EXE=!CLAUDE_DIR!\.local\bin\claude.exe"
 
     if "!ANTHROPIC_BASE_URL!"=="" set "ANTHROPIC_BASE_URL=https://api.anthropic.com"
-    if "!ANTHROPIC_DEFAULT_MODEL!"=="" set "ANTHROPIC_DEFAULT_MODEL=claude-sonnet-5"
+    if "!ANTHROPIC_DEFAULT_MODEL!"=="" set "ANTHROPIC_DEFAULT_MODEL=claude-opus-5[1m]"
     if "!RESOURCES_SYNCHRONIZATION!"=="" set "RESOURCES_SYNCHRONIZATION=0"
     if "!UPDATE_MASK!"=="" set "UPDATE_MASK=raw/refs/heads/{BRANCH}/claude.cmd"
     goto :eof
@@ -257,9 +257,9 @@ goto :exit
     )
 
     set "INPUT_ANTHROPIC_DEFAULT_MODEL="
-    set /p "INPUT_ANTHROPIC_DEFAULT_MODEL=Enter ANTHROPIC_DEFAULT_MODEL [claude-sonnet-5]: "
+    set /p "INPUT_ANTHROPIC_DEFAULT_MODEL=Enter ANTHROPIC_DEFAULT_MODEL [claude-opus-5[1m]]: "
     if "!INPUT_ANTHROPIC_DEFAULT_MODEL!"=="" (
-        set "ANTHROPIC_DEFAULT_MODEL=claude-sonnet-5"
+        set "ANTHROPIC_DEFAULT_MODEL=claude-opus-5[1m]"
     ) else (
         set "ANTHROPIC_DEFAULT_MODEL=!INPUT_ANTHROPIC_DEFAULT_MODEL!"
     )
