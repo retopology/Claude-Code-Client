@@ -1,11 +1,11 @@
-:: 1.3.0-dev.1
+:: 1.3.0-dev.2
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.3.0-dev.1"
+set "VERSION_CLIENT=1.3.0-dev.2"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -156,10 +156,6 @@ if defined ACTION_PICK_PROFILE (
 )
 
 call :main
-echo.
-echo Thank you for using Claude Code Client ~
-echo.
-timeout /t 1 >nul
 goto :exit
 
 :main
