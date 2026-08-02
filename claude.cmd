@@ -1,11 +1,11 @@
-:: 1.3.0-dev.3
+:: 1.3.0-dev.4
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.3.0-dev.3"
+set "VERSION_CLIENT=1.3.0-dev.4"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -109,8 +109,18 @@ set "FIRST_ARG=%~1"
 :parse_set_arg
     shift
     if "%~1"=="" goto :parse_args_loop
+    set "_SET_ARG=%~1"
+    set "_SET_KEY="
+    for /f "tokens=1 delims==" %%K in ("!_SET_ARG!") do set "_SET_KEY=%%K"
+    if "!_SET_KEY!"=="!_SET_ARG!" (
+        set "next_arg=%~2"
+        if defined next_arg if not "!next_arg:~0,1!"=="-" (
+            set "_SET_ARG=!_SET_ARG!=!next_arg!"
+            shift
+        )
+    )
     set /a "OVERRIDE_COUNT+=1"
-    set "OVERRIDE_!OVERRIDE_COUNT!=%~1"
+    set "OVERRIDE_!OVERRIDE_COUNT!=!_SET_ARG!"
     shift
     goto :parse_args_loop
 
