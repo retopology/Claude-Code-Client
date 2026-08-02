@@ -1,11 +1,11 @@
-:: 1.3.0-dev.4
+:: 1.3.0-dev.5
 :: Claude Code Client
 
 @echo off
 chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
-set "VERSION_CLIENT=1.3.0-dev.4"
+set "VERSION_CLIENT=1.3.0-dev.5"
 set "CLIENT_DIR=%~dp0"
 set "RESOURCES_DIR=%~dp0resources"
 set "NODE_DIR=%~dp0node"
@@ -70,6 +70,7 @@ set "FIRST_ARG=%~1"
     if /i "!_ARG!"=="--profile"       goto :parse_profile_arg
     if /i "!_ARG!"=="-pr"             goto :parse_profile_arg
     if /i "!_ARG!"=="--set"           goto :parse_set_arg
+    if /i "!_ARG!"=="--context"       goto :parse_context_arg
 
     set "CURRENT_ARG="
     set "CURRENT_ARG=%1"
@@ -121,6 +122,16 @@ set "FIRST_ARG=%~1"
     )
     set /a "OVERRIDE_COUNT+=1"
     set "OVERRIDE_!OVERRIDE_COUNT!=!_SET_ARG!"
+    shift
+    goto :parse_args_loop
+
+:parse_context_arg
+    shift
+    if "%~1"=="" goto :parse_args_loop
+    set "next_arg=%~1"
+    if "!next_arg:~0,1!"=="-" goto :parse_args_loop
+    set /a "OVERRIDE_COUNT+=1"
+    set "OVERRIDE_!OVERRIDE_COUNT!=CLAUDE_CODE_MAX_CONTEXT_TOKENS=!next_arg!"
     shift
     goto :parse_args_loop
 
